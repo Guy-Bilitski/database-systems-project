@@ -32,10 +32,29 @@ def connect_to_db(uid, pwd):
     return cnx
 
 
+def convert_to_jsons(jsons_string):
+    prev = 1
+    count = 0
+    just_finished = 0
+    jsons_list = []
+
+    for i in range(1, len(jsons_string)):
+        if jsons_string[i] == '{':
+            count += 1
+            continue
+        if jsons_string[i] == '}':
+            count -= 1
+            if count == 0:
+                new_json = json.loads(jsons_string[prev:i+1])
+                jsons_list.append(new_json)
+                prev = i + 2
+    return jsons_list
+
+
 def get_docs(url, headers):
     res = requests.get(url, headers=headers)
     text_res = res.text
-    res_list = re.split('{*}', text_res)
+    res_list = convert_to_jsons(text_res)
     res_list = list(map(lambda x: x[1:] + '}', res_list))[:-1]
     res_list = list(map(lambda x: json.loads(x), res_list))
     return res_list
