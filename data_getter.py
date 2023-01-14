@@ -102,8 +102,8 @@ def insert_records(start_year, finish_year, cnx):
     for year in range(start_year, finish_year + 1):
         records = get_docs(RECORDS_URL(year), HEADERS)
         for i, doc in enumerate(records):
-            doc_args = (doc["year"], doc["team"], doc["expected_wins"], doc["total_games"], doc["wins"],
-                        doc["losses"], doc["ties"])
+            doc_args = (doc["year"], doc["team"], doc["expectedWins"], doc["total"]["games"], doc["total"]["wins"],
+                        doc["total"]["losses"], doc["total"]["ties"])
             cursor.execute(RECORDS_INSERT_QUERY, doc_args)
             if i % 50 == 0:
                 cnx.commit()
