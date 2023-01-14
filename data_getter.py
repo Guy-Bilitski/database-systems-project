@@ -35,7 +35,6 @@ def connect_to_db(uid, pwd):
 def convert_to_jsons(jsons_string):
     prev = 1
     count = 0
-    just_finished = 0
     jsons_list = []
 
     for i in range(1, len(jsons_string)):
@@ -55,8 +54,8 @@ def get_docs(url, headers):
     res = requests.get(url, headers=headers)
     text_res = res.text
     res_list = convert_to_jsons(text_res)
-    res_list = list(map(lambda x: x[1:] + '}', res_list))[:-1]
-    res_list = list(map(lambda x: json.loads(x), res_list))
+    #res_list = list(map(lambda x: x[1:] + '}', res_list))[:-1]
+    #res_list = list(map(lambda x: json.loads(x), res_list))
     return res_list
 
 
@@ -64,10 +63,8 @@ def insert_venues(cnx):
     cursor = cnx.cursor()
     venues = get_docs(VENUES_URL, HEADERS)
     for i, doc in enumerate(venues):
-        doc_args = (doc["id"], doc["season"], doc["week"], doc["neutral_site"], doc["attendance"],
-                    doc["venue_id"], doc["home_id"], doc["home_points"], doc["home_post_win_prob"],
-                    doc["away_id"], doc["away_points"], doc["away_post_win_prob"], doc["excitement_index"])
-        cursor.execute(GAMES_INSERT_QUERY, doc_args)
+        doc_args = (doc["id"], doc["name"], doc["capacity"], doc["grass"], doc["city"], doc["state"])
+        cursor.execute(VENUES_INSERT_QUERY, doc_args)
         if i % 50 == 0:
             cnx.commit()
     cnx.commit()
@@ -78,8 +75,10 @@ def insert_games(start_year, finish_year, cnx):
     for year in range(start_year, finish_year + 1):
         games = get_docs(GAMES_URL(year), HEADERS)
         for i, doc in enumerate(games):
-            doc_args = (doc["id"], doc["name"], doc["capacity"], doc["grass"], doc["city"], doc["state"])
-            cursor.execute(VENUES_INSERT_QUERY, doc_args)
+            doc_args = (doc["id"], doc["season"], doc["week"], doc["neutral_site"], doc["attendance"],
+                    doc["venue_id"], doc["home_id"], doc["home_points"], doc["home_post_win_prob"],
+                    doc["away_id"], doc["away_points"], doc["away_post_win_prob"], doc["excitement_index"])
+            cursor.execute(GAMES_INSERT_QUERY, doc_args)
             if i % 50 == 0:
                 cnx.commit()
         cnx.commit()
@@ -96,6 +95,9 @@ def main():
     cnx = connect_to_db(uid, pwd)
     insert_venues(cnx)
     #insert_games(1990, 2020, cnx)
+    #check = '[{"_id": 123, "location": { "venue": 123, "place": "check" }}, {"_id": 123, "location": { "venue": 123, "place": "check" }}]'
+    #res = convert_to_jsons(check)
+    #print(res)
 
 
 if __name__ == "__main__":
