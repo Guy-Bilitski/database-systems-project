@@ -1,6 +1,6 @@
 CREATE TABLE Games (
 	ID int,
-	Season varchar(255),
+	Season SMALLINT,
 	Week TINYINT,
 	Neutral_site bool,
 	Venue_id int,

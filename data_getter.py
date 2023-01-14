@@ -7,14 +7,14 @@ HOST = "localhost"
 DB_NAME = "guybilitski"
 DRIVER = "{SQL Server}"
 PORT = "3305"
+COMMIT_INTERVAL = 200
 
 VENUES_URL = "https://api.collegefootballdata.com/venues"
 GAMES_URL = lambda year: 'https://api.collegefootballdata.com/games?year={}&seasonType=regular'.format(year)
 TEAMS_URL = "https://api.collegefootballdata.com/teams"
-RECORDS_URL = lambda year: 'https://api.collegefootballdata.com/records?year=2020'.format(year)
-ATHLETES_URL = lambda year: "https://api.collegefootballdata.com/stats/player/season?year={}".format(year)
-PLAYS_URL = lambda year, week: 'https://api.collegefootballdata.com/plays?seasonType=regular&year={}&week={}' \
-    .format(year, week)
+RECORDS_URL = lambda year: 'https://api.collegefootballdata.com/records?year={}'.format(year)
+ATHLETES_URL = "https://api.collegefootballdata.com/roster"
+ROSTER_URL = 'https://api.collegefootballdata.com/roster'
 
 GAMES_INSERT_QUERY = "INSERT INTO Games" \
                      " (ID, Season, Week, Neutral_site, Venue_id, Home_id, Home_points, " \
@@ -29,8 +29,8 @@ RECORDS_INSERT_QUERY = "INSERT INTO Records" \
                        " (Year, Team, Expected_wins, Total_games, Wins, Losses, Ties)" \
                        " VALUES (%s, %s, %s, %s, %s, %s, %s)"
 ATHLETES_INSERT_QUERY = "INSERT INTO Athletes (ID, Name) VALUES (%s, %s)"
-PLAYS_INSERT_QUERY = "INSERT INTO Plays" \
-                     " (ID, Team, Opponent, Distance, Athlete_id) VALUES (%s, %s, %s, %s)"
+ROSTER_INSERT_QUERY = "INSERT INTO Roster" \
+                     " (ID, Team, Year) VALUES (%s, %s, %s)"
 
 
 def connect_to_db(uid, pwd):
@@ -75,26 +75,28 @@ def insert_teams(cnx):
     for i, doc in enumerate(venues):
         doc_args = (doc["id"], doc["school"], doc["location"]["venue_id"])
         cursor.execute(TEAMS_INSERT_QUERY, doc_args)
-        if i % 50 == 0:
+        if i % COMMIT_INTERVAL == 0:
             cnx.commit()
     cnx.commit()
 
 
-def insert_athletes(start_year, finish_year, cnx):
+def insert_athletes(cnx):
     already_inserted_athletes = set()
     cursor = cnx.cursor()
-    for year in range(start_year, finish_year + 1):
-        athletes = get_docs(ATHLETES_URL(year), HEADERS)
-        for i, doc in enumerate(athletes):
-            doc_args = (doc["playerId"], doc["player"])
-            if doc_args[0] in already_inserted_athletes:
-                continue
-            else:
-                already_inserted_athletes.add(doc_args[0])
-            cursor.execute(ATHLETES_INSERT_QUERY, doc_args)
-            if i % 50 == 0:
-                cnx.commit()
-        cnx.commit()
+    athletes = get_docs(ATHLETES_URL, HEADERS)
+    for i, doc in enumerate(athletes):
+        try:
+            doc_args = (doc["id"], doc["first_name"] + " " + doc["last_name"])
+        except Exception:
+            continue
+        if doc_args[0] in already_inserted_athletes:
+            continue
+        else:
+            already_inserted_athletes.add(doc_args[0])
+        cursor.execute(ATHLETES_INSERT_QUERY, doc_args)
+        if i % COMMIT_INTERVAL == 0:
+            cnx.commit()
+    cnx.commit()
 
 
 def insert_records(start_year, finish_year, cnx):
@@ -105,22 +107,20 @@ def insert_records(start_year, finish_year, cnx):
             doc_args = (doc["year"], doc["team"], doc["expectedWins"], doc["total"]["games"], doc["total"]["wins"],
                         doc["total"]["losses"], doc["total"]["ties"])
             cursor.execute(RECORDS_INSERT_QUERY, doc_args)
-            if i % 50 == 0:
+            if i % COMMIT_INTERVAL == 0:
                 cnx.commit()
         cnx.commit()
 
 
-def insert_plays(start_year, finish_year, cnx):
+def insert_roster(cnx):
     cursor = cnx.cursor()
-    for year in range(start_year, finish_year + 1):
-        for week in range(1, 17):
-            plays = get_docs(PLAYS_URL(year, week), HEADERS)
-            for i, doc in enumerate(plays):
-                doc_args = (doc["ID"], doc["Team"], doc["Opponent"], doc["Distance"], doc["Athlete_id"])
-                cursor.execute(PLAYS_INSERT_QUERY, doc_args)
-                if i % 50 == 0:
-                    cnx.commit()
+    roster = get_docs(ROSTER_URL, HEADERS)
+    for i, doc in enumerate(roster):
+        doc_args = (doc["id"], doc["team"], doc["year"])
+        cursor.execute(ROSTER_INSERT_QUERY, doc_args)
+        if i % COMMIT_INTERVAL == 0:
             cnx.commit()
+    cnx.commit()
 
 
 def insert_venues(cnx):
@@ -129,7 +129,7 @@ def insert_venues(cnx):
     for i, doc in enumerate(venues):
         doc_args = (doc["id"], doc["name"], doc["capacity"], doc["grass"], doc["city"], doc["state"])
         cursor.execute(VENUES_INSERT_QUERY, doc_args)
-        if i % 50 == 0:
+        if i % COMMIT_INTERVAL == 0:
             cnx.commit()
     cnx.commit()
 
@@ -142,7 +142,7 @@ def insert_games(start_year, finish_year, cnx):
             doc_args = (doc["id"], doc["season"], doc["week"], doc["neutral_site"], doc["venue_id"],
                         doc["home_id"], doc["home_points"], doc["away_id"], doc["away_points"])
             cursor.execute(GAMES_INSERT_QUERY, doc_args)
-            if i % 50 == 0:
+            if i % COMMIT_INTERVAL == 0:
                 cnx.commit()
         cnx.commit()
 
@@ -159,8 +159,9 @@ def main():
     # insert_venues(cnx)
     # insert_teams(cnx)
     # insert_games(1990, 2020, cnx)
-    # insert_athletes(2000, 2020, cnx)
-    insert_records(1990, 2020, cnx)
+    #insert_athletes(cnx)
+    # insert_records(1990, 2020, cnx)
+    insert_roster(cnx)
 
 
 if __name__ == "__main__":

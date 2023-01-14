@@ -1,8 +1,7 @@
-CREATE TABLE Plays (
+CREATE TABLE Roster (
 	ID int,
 	Team varchar(255),
-	Opponent varchar(255),
-	Distance TINYINT,
-	Athlete_id int,
-	PRIMARY KEY (ID)
+	Year SMALLINT,
+	PRIMARY KEY (ID, Team, Year),
+	FOREIGN KEY (ID) REFERENCES Athletes(ID)
 );

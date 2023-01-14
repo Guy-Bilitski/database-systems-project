@@ -1,7 +1,7 @@
 
 
 def validate_query(query):
-    if 1 > query > 6:
+    if not 1 <= query <= 6:
         raise Exception("there is no such query option!")
 
 
@@ -10,14 +10,22 @@ def main():
     while True:
         print("---explain---")
         try:
-            query = int(input("What query would you like to perform?"))
+            query = input("What query would you like to perform?")
+            if query == "exit":
+                break
+            query = int(query)
             validate_query(query)
         except ValueError:
             print("Invalid input!")
+            continue
         except Exception as ex:
             print(ex)
-        finally:
             continue
+
+
+    print("Bye!")
+
+
 
 
 
