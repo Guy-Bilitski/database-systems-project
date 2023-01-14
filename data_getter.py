@@ -116,6 +116,8 @@ def insert_roster(cnx):
     cursor = cnx.cursor()
     roster = get_docs(ROSTER_URL, HEADERS)
     for i, doc in enumerate(roster):
+        if doc["id"] is None or doc["team"] is None or doc["year"] is None:
+            continue
         doc_args = (doc["id"], doc["team"], doc["year"])
         cursor.execute(ROSTER_INSERT_QUERY, doc_args)
         if i % COMMIT_INTERVAL == 0:
