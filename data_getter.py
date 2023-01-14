@@ -13,10 +13,8 @@ GAMES_URL = lambda year: 'https://api.collegefootballdata.com/games?year={}&seas
 TEAMS_URL = "https://api.collegefootballdata.com/teams"
 RECORDS_URL = lambda year: 'https://api.collegefootballdata.com/records?year=2020'.format(year)
 ATHLETES_URL = lambda year: "https://api.collegefootballdata.com/stats/player/season?year={}".format(year)
-PLAYS_URL = lambda year, week: 'https://api.collegefootballdata.com/plays?seasonType=regular&year={}&week={}'\
+PLAYS_URL = lambda year, week: 'https://api.collegefootballdata.com/plays?seasonType=regular&year={}&week={}' \
     .format(year, week)
-
-
 
 GAMES_INSERT_QUERY = "INSERT INTO Games" \
                      " (ID, Season, Week, Neutral_site, Venue_id, Home_id, Home_points, " \
@@ -28,11 +26,11 @@ VENUES_INSERT_QUERY = "INSERT INTO Venues" \
 TEAMS_INSERT_QUERY = "INSERT INTO Teams" \
                      " (ID, School, Venue_id) VALUES (%s, %s, %s)"
 RECORDS_INSERT_QUERY = "INSERT INTO Records" \
-                       " (Year, Team_id, Expected_wins, Total_games, Wins, Losses, Ties)" \
+                       " (Year, Team, Expected_wins, Total_games, Wins, Losses, Ties)" \
                        " VALUES (%s, %s, %s, %s, %s, %s, %s)"
 ATHLETES_INSERT_QUERY = "INSERT INTO Athletes (ID, Name) VALUES (%s, %s)"
 PLAYS_INSERT_QUERY = "INSERT INTO Plays" \
-                       " (ID, Team, Opponent, Distance, Athlete_id) VALUES (%s, %s, %s, %s)"
+                     " (ID, Team, Opponent, Distance, Athlete_id) VALUES (%s, %s, %s, %s)"
 
 
 def connect_to_db(uid, pwd):
@@ -104,7 +102,7 @@ def insert_records(start_year, finish_year, cnx):
     for year in range(start_year, finish_year + 1):
         records = get_docs(RECORDS_URL(year), HEADERS)
         for i, doc in enumerate(records):
-            doc_args = (doc["year"], doc["team_id"], doc["expected_wins"], doc["total_games"], doc["wins"],
+            doc_args = (doc["year"], doc["team"], doc["expected_wins"], doc["total_games"], doc["wins"],
                         doc["losses"], doc["ties"])
             cursor.execute(RECORDS_INSERT_QUERY, doc_args)
             if i % 50 == 0:
@@ -161,7 +159,8 @@ def main():
     # insert_venues(cnx)
     # insert_teams(cnx)
     # insert_games(1990, 2020, cnx)
-    insert_athletes(2000, 2020, cnx)
+    # insert_athletes(2000, 2020, cnx)
+    insert_records(1990, 2020, cnx)
 
 
 if __name__ == "__main__":
