@@ -7,14 +7,13 @@ HOST = "localhost"
 DB_NAME = "guybilitski"
 DRIVER = "{SQL Server}"
 PORT = "3305"
-COMMIT_INTERVAL = 200
 
 VENUES_URL = "https://api.collegefootballdata.com/venues"
 GAMES_URL = lambda year: 'https://api.collegefootballdata.com/games?year={}&seasonType=regular'.format(year)
 TEAMS_URL = "https://api.collegefootballdata.com/teams"
 RECORDS_URL = lambda year: 'https://api.collegefootballdata.com/records?year={}'.format(year)
-PLAYERS_URL = lambda year: "https://api.collegefootballdata.com/stats/player/season?year={}".format(year)
-ROSTER_URL = lambda year: "https://api.collegefootballdata.com/stats/player/season?year={}".format(year)
+PLAYERS_URL = lambda year: "https://api.collegefootballdata.com/roster?year={}".format(year)
+ROSTER_URL = lambda year: "https://api.collegefootballdata.com/roster?year={}".format(year)
 
 GAMES_INSERT_QUERY = "INSERT INTO Games" \
                      " (ID, Season, Week, Neutral_site, Venue_id, Home_id, Home_points, " \
@@ -75,8 +74,6 @@ def insert_teams(cnx):
     for i, doc in enumerate(venues):
         doc_args = (doc["id"], doc["school"], doc["location"]["venue_id"])
         cursor.execute(TEAMS_INSERT_QUERY, doc_args)
-        if i % COMMIT_INTERVAL == 0:
-            cnx.commit()
     cnx.commit()
 
 
@@ -86,16 +83,17 @@ def insert_players(start_year, finish_year, cnx):
     for year in range(start_year, finish_year+1):
         players = get_docs(PLAYERS_URL(year), HEADERS)
         for i, doc in enumerate(players):
-            if int(doc["playerId"]) <= 0 or doc["player"] == "Team":  # eliminate legacy
+            try:
+                doc_args = (doc["id"], doc["first_name"] + " " + doc["last_name"])
+                if doc_args[1] == '- Team':
+                    continue
+            except Exception:
                 continue
-            doc_args = (doc["playerId"], doc["player"])
             if doc_args[0] in already_inserted_players:
                 continue
             else:
                 already_inserted_players.add(doc_args[0])
             cursor.execute(PLAYERS_INSERT_QUERY, doc_args)
-            if i % COMMIT_INTERVAL == 0:
-                cnx.commit()
         cnx.commit()
 
 
@@ -107,8 +105,6 @@ def insert_records(start_year, finish_year, cnx):
             doc_args = (doc["year"], doc["team"], doc["expectedWins"], doc["total"]["games"], doc["total"]["wins"],
                         doc["total"]["losses"], doc["total"]["ties"])
             cursor.execute(RECORDS_INSERT_QUERY, doc_args)
-            if i % COMMIT_INTERVAL == 0:
-                cnx.commit()
         cnx.commit()
 
 
@@ -118,16 +114,17 @@ def insert_roster(start_year, finish_year, cnx):
     for year in range(start_year, finish_year+1):
         roster = get_docs(ROSTER_URL(year), HEADERS)
         for i, doc in enumerate(roster):
-            if int(doc["playerId"]) <= 0 or doc["player"] == "Team":  # eliminate legacy
+            try:
+                if doc["first_name"] + " " + doc["last_name"] == '- Team':
+                    continue
+                doc_args = (doc["id"], doc["team"], year)
+            except Exception:
                 continue
-            doc_args = (doc["playerId"], doc["team"], year)
             if doc_args[0] in already_inserted_players:
                 continue
             else:
                 already_inserted_players.add(doc_args[0])
             cursor.execute(ROSTER_INSERT_QUERY, doc_args)
-            if i % COMMIT_INTERVAL == 0:
-                cnx.commit()
         cnx.commit()
 
 
@@ -137,8 +134,6 @@ def insert_venues(cnx):
     for i, doc in enumerate(venues):
         doc_args = (doc["id"], doc["name"], doc["capacity"], doc["grass"], doc["city"], doc["state"])
         cursor.execute(VENUES_INSERT_QUERY, doc_args)
-        if i % COMMIT_INTERVAL == 0:
-            cnx.commit()
     cnx.commit()
 
 
@@ -150,8 +145,6 @@ def insert_games(start_year, finish_year, cnx):
             doc_args = (doc["id"], doc["season"], doc["week"], doc["neutral_site"], doc["venue_id"],
                         doc["home_id"], doc["home_points"], doc["away_id"], doc["away_points"])
             cursor.execute(GAMES_INSERT_QUERY, doc_args)
-            if i % COMMIT_INTERVAL == 0:
-                cnx.commit()
         cnx.commit()
 
 
@@ -168,8 +161,8 @@ def main():
     # insert_teams(cnx)
     # insert_games(1990, 2020, cnx)
     # insert_records(1990, 2020, cnx)
-    #insert_players(1990, 2020, cnx)
-    insert_roster(1990, 2020, cnx)
+    # insert_players(2013, 2020, cnx)
+    insert_roster(2013, 2020, cnx)
 
 
 if __name__ == "__main__":
