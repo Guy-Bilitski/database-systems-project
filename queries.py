@@ -2,10 +2,10 @@ import data_getter
 
 
 HEADERS = {"accept": "application/json"}
-QUERY1 = lambda name: "SELECT V.Name" \
-                      " FROM Venues AS V, Players AS P, Teams AS T, Roster AS R" \
-                      " WHERE {} = P.Name" \
-                      " AND P.ID = R.ID AND R.Team = T.School AND T.Venue_id = V.ID".format(name)
+QUERY1 = "SELECT V.Name FROM Venues AS V, Players AS P, Teams AS T, Roster AS R" \
+                      " WHERE %(player_name)s = P.Name" \
+                      " AND P.ID = R.ID AND R.Team = T.School AND T.Venue_id = V.ID"
+
 
 def validate_query(query):
     if not 1 <= query <= 6:
@@ -13,12 +13,22 @@ def validate_query(query):
 
 
 def pick_query(query_num, cnx):
-    cursor = cnx.cursor()
-    if query_num == 1:
-        name = input("Insert name")
-        cursor.execute(QUERY1(name))
-        res = cursor.fetchall()
-        print("Stadiums are: ", res)
+    with cnx.cursor() as cursor:
+        if query_num == 1:
+            player_name = input("Insert name")
+            cursor.execute(QUERY1, {'player_name': player_name})
+            res = list(map(lambda x: x[0], cursor.fetchall()))
+            print("Stadiums are: ", res)
+        elif query_num == 2:
+            pass
+        elif query_num == 3:
+            pass
+        elif query_num == 4:
+            pass
+        elif query_num == 5:
+            pass
+        elif query_num == 6:
+            pass
 
 
 def main():
@@ -28,9 +38,17 @@ def main():
         pwd = f.readline()
     HEADERS["Authorization"] = auth
     cnx = data_getter.connect_to_db(uid, pwd)
-    print("Hello and welcome to college football data!")
+    print("*** Welcome to the football college systems! we have a plenty of data for you to get to know better "
+          "the league ***")
+    print("You can always leave the system by typing exit")
     while True:
-        print("---explain---")
+        print("\nOptional queries:")
+        print("Option 1: Given a player's name, see all the stadiums that he played at.")
+        print("Option 2: ")
+        print("Option 3: ")
+        print("Option 4: ")
+        print("Option 5: ")
+        print("Option 6: ")
         try:
             query = input("What query would you like to perform?")
             if query == "exit":
