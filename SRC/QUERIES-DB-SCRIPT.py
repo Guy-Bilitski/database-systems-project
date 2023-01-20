@@ -1,6 +1,11 @@
-import data_getter
+import mysql.connector
 
+HOST = "localhost"
+DB_NAME = "guybilitski"
+DRIVER = "{SQL Server}"
+PORT = "3305"
 HEADERS = {"accept": "application/json"}
+
 QUERY1 = """SELECT P.Name, V.Name FROM Venues AS V, Players AS P, Teams AS T, Roster AS R
                       WHERE MATCH(P.Name) AGAINST(%(player_name)s)
                       AND P.ID = R.ID AND R.Team = T.School AND T.Venue_id = V.ID"""
@@ -16,7 +21,7 @@ QUERY2 = """SELECT t.School, mp.max_points
 	                GROUP BY tid1) as mp
             WHERE mp.tid = t.ID"""
 
-QUERY3 = """ SELECT v.Name as venue, vg.games as games
+QUERY3 = """ SELECT v.Name as venue, v.City as city, v.State as state, vg.games as games
                 FROM Venues as v, (SELECT COUNT(*) as games, g.Venue_id as vid
 	                FROM Games as g
 	                GROUP BY g.Venue_id) as vg
@@ -62,6 +67,17 @@ def validate_query(query):
         raise Exception("There is no such query option!")
 
 
+def connect_to_db(uid, pwd):
+    cnx = mysql.connector.connect(
+        host=HOST,
+        port=PORT,
+        user=uid,
+        password=pwd,
+        database=DB_NAME
+    )
+    return cnx
+
+
 def pick_query(query_num, cnx):
     with cnx.cursor() as cursor:
         if query_num == 1:
@@ -85,8 +101,9 @@ def pick_query(query_num, cnx):
         elif query_num == 3:
             cursor.execute(QUERY3)
             res = cursor.fetchall()
-            for team in res:
-                print("Venue: " + team[0] + ", Number of games: " + str(team[1]))
+            for venue in res:
+                print("Venue: " + venue[0] + ", Location: " + venue[1] + ", " + venue[2] + ". Number of games: " + str(
+                    venue[3]))
 
         elif query_num == 4:
             cursor.execute(QUERY4)
@@ -104,17 +121,19 @@ def pick_query(query_num, cnx):
             cursor.execute(QUERY6)
             res = cursor.fetchall()
             for year in res:
+                home_winning_ratio = year[3] / year[2]
                 print("Year: " + str(year[0]) + ", Total teams: " + str(year[1]) + ", total_games: " + str(year[2])
-                      + ", Home wins: " + str(year[3]) + ", Away wins: " + str(year[4]))
+                      + ", Home wins: " + str(year[3]) + ", Away wins: " + str(year[4]) + ", Home winning ratio: " +
+                      str(home_winning_ratio)[2:4] + "." + str(home_winning_ratio)[4:7] + "%")
 
 
 def main():
-    with open('secret.txt') as f:
+    with open('../DOCUMENTATION/MYSQL-USER-AND-PASSWORD.txt') as f:
         auth = f.readline()[:-1]
         uid = f.readline()[:-1]
         pwd = f.readline()
     HEADERS["Authorization"] = auth
-    cnx = data_getter.connect_to_db(uid, pwd)
+    cnx = connect_to_db(uid, pwd)
     print("*** Welcome to the football college systems! we have a plenty of data for you to get to know better "
           "the league ***")
     print("You can always leave the system by typing exit")
@@ -127,7 +146,8 @@ def main():
         print("Option 4: returns the number of years that a team had won more then expected for the coming year")
         print("Option 5: for each year returns the teams that the difference between the expected wins and actual "
               "wins is the greatest")
-        print("Option 6: for each year, returns the total games played, alongside the home and away wins")
+        print("Option 6: for each year, returns the total games played and the amount of teams played alongside the "
+              "home and away wins")
         print()
         try:
             query = input("What query would you like to perform?")

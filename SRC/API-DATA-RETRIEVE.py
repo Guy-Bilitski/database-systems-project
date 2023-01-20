@@ -149,7 +149,7 @@ def insert_games(start_year, finish_year, cnx):
 
 
 def main():
-    with open('secret.txt') as f:
+    with open('../DOCUMENTATION/MYSQL-USER-AND-PASSWORD.txt') as f:
         auth = f.readline()[:-1]
         uid = f.readline()[:-1]
         pwd = f.readline()

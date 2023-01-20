@@ -1,1 +1,1 @@
-CREATE INDEX team_name ON Teams(school)
+CREATE INDEX team_name ON Teams(school);
