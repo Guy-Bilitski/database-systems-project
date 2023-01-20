@@ -34,8 +34,8 @@ CREATE TABLE Games (
 	FOREIGN KEY (Venue_id) REFERENCES Venues(ID)
 );
 
-CREATE INDEX away_id ON Games(away_id);
-CREATE INDEX home_id ON Games(home_id);
+CREATE INDEX away_id ON Games(Away_id);
+CREATE INDEX home_id ON Games(Home_id);
 
 CREATE TABLE Players (
 	ID int,
