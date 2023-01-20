@@ -157,11 +157,11 @@ def main():
     HEADERS["Authorization"] = auth
 
     cnx = connect_to_db(uid, pwd)
-    # insert_venues(cnx)
-    # insert_teams(cnx)
-    # insert_games(1990, 2020, cnx)
-    # insert_records(1990, 2020, cnx)
-    # insert_players(2013, 2020, cnx)
+    insert_venues(cnx)
+    insert_teams(cnx)
+    insert_games(1990, 2020, cnx)
+    insert_records(1990, 2020, cnx)
+    insert_players(2013, 2020, cnx)
     insert_roster(2013, 2020, cnx)
 
 
