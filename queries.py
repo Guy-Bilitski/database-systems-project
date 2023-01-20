@@ -1,6 +1,5 @@
 import data_getter
 
-
 HEADERS = {"accept": "application/json"}
 QUERY1 = """SELECT P.Name, V.Name FROM Venues AS V, Players AS P, Teams AS T, Roster AS R
                       WHERE MATCH(P.Name) AGAINST(%(player_name)s)
@@ -9,25 +8,25 @@ QUERY1 = """SELECT P.Name, V.Name FROM Venues AS V, Players AS P, Teams AS T, Ro
 QUERY2 = """SELECT t.School, mp.max_points
             FROM Teams as t, (SELECT GREATEST(apts, hpts) as max_points, tid1 as tid
 	            FROM (SELECT Max(g.Away_points) as apts, t.ID as tid1
-	            FROM Games as g, Teams as t
-	            Where g.Away_id = t.ID GROUP BY t.ID) as max_away
-	            INNER JOIN (SELECT Max(g.home_points) as hpts, t.ID as tid2
-	            FROM Games as g, Teams as t
-	            Where g.home_id = t.ID GROUP BY t.ID) as max_home ON max_away.tid1 = max_home.tid2
-	            GROUP BY tid1) as mp
+	                FROM Games as g, Teams as t
+	                Where g.Away_id = t.ID GROUP BY t.ID) as max_away
+	                INNER JOIN (SELECT Max(g.home_points) as hpts, t.ID as tid2
+	                FROM Games as g, Teams as t
+	                Where g.home_id = t.ID GROUP BY t.ID) as max_home ON max_away.tid1 = max_home.tid2
+	                GROUP BY tid1) as mp
             WHERE mp.tid = t.ID"""
 
 QUERY3 = """ SELECT v.Name as venue, vg.games as games
                 FROM Venues as v, (SELECT COUNT(*) as games, g.Venue_id as vid
 	                FROM Games as g
 	                GROUP BY g.Venue_id) as vg
-                WHERE v.ID = vg.vid
-                ORDER BY games DESC"""
+            WHERE v.ID = vg.vid
+            ORDER BY games DESC"""
 
 QUERY4 = """ SELECT beaten.team as team, COUNT(*) as years
                 FROM (SELECT r.Year as year, r.Team as team
                 FROM Records as r
-            WHERE r.Expected_wins < r.Wins) as beaten
+                WHERE r.Expected_wins < r.Wins) as beaten
             GROUP BY beaten.team
             ORDER BY years DESC"""
 

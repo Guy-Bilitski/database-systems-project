@@ -1,0 +1,1 @@
+CREATE INDEX away_id ON Games(away_id)
