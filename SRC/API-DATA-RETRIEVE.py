@@ -29,7 +29,7 @@ RECORDS_INSERT_QUERY = "INSERT INTO Records" \
                        " VALUES (%s, %s, %s, %s, %s, %s, %s)"
 PLAYERS_INSERT_QUERY = "INSERT INTO Players (ID, Name) VALUES (%s, %s)"
 ROSTER_INSERT_QUERY = "INSERT INTO Roster" \
-                     " (ID, Team, Year) VALUES (%s, %s, %s)"
+                      " (ID, Team, Year) VALUES (%s, %s, %s)"
 
 
 def connect_to_db(uid, pwd):
@@ -80,7 +80,7 @@ def insert_teams(cnx):
 def insert_players(start_year, finish_year, cnx):
     already_inserted_players = set()
     cursor = cnx.cursor()
-    for year in range(start_year, finish_year+1):
+    for year in range(start_year, finish_year + 1):
         players = get_docs(PLAYERS_URL(year), HEADERS)
         for i, doc in enumerate(players):
             try:
@@ -111,7 +111,7 @@ def insert_records(start_year, finish_year, cnx):
 def insert_roster(start_year, finish_year, cnx):
     cursor = cnx.cursor()
     already_inserted_players = set()
-    for year in range(start_year, finish_year+1):
+    for year in range(start_year, finish_year + 1):
         roster = get_docs(ROSTER_URL(year), HEADERS)
         for i, doc in enumerate(roster):
             try:
