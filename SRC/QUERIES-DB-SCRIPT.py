@@ -10,21 +10,22 @@ QUERY1 = """SELECT P.Name, V.Name FROM Venues AS V, Players AS P, Teams AS T, Ro
                       WHERE MATCH(P.Name) AGAINST(%(player_name)s)
                       AND P.ID = R.ID AND R.Team = T.School AND T.Venue_id = V.ID"""
 
-QUERY2 = """SELECT t.School, mp.max_points
-            FROM Teams as t, (SELECT GREATEST(apts, hpts) as max_points, tid1 as tid
-	            FROM (SELECT Max(g.Away_points) as apts, t.ID as tid1
-	                FROM Games as g, Teams as t
-	                Where g.Away_id = t.ID GROUP BY t.ID) as max_away
-	                INNER JOIN (SELECT Max(g.home_points) as hpts, t.ID as tid2
-	                FROM Games as g, Teams as t
-	                Where g.home_id = t.ID GROUP BY t.ID) as max_home ON max_away.tid1 = max_home.tid2
-	                GROUP BY tid1) as mp
-            WHERE mp.tid = t.ID"""
+QUERY2 = """SELECT t.School AS school, MAX(mp.points) AS points
+            FROM Teams as t,
+                (SELECT g1.Home_points AS points, g1.Home_id AS tid
+                FROM Games as g1
+                UNION
+                SELECT g2.Away_points AS points, g2.Away_id AS tid
+                FROM Games as g2) AS mp
+            WHERE mp.tid = t.ID
+            GROUP BY mp.tid
+            ORDER BY points DESC"""
 
-QUERY3 = """ SELECT v.Name as venue, v.City as city, v.State as state, vg.games as games
-                FROM Venues as v, (SELECT COUNT(*) as games, g.Venue_id as vid
-	                FROM Games as g
-	                GROUP BY g.Venue_id) as vg
+QUERY3 = """SELECT v.Name as venue, v.City as city, v.State as state, vg.games as games
+            FROM Venues as v,
+                (SELECT COUNT(*) as games, g.Venue_id as vid
+	            FROM Games as g
+	            GROUP BY g.Venue_id) as vg
             WHERE v.ID = vg.vid
             ORDER BY games DESC"""
 
@@ -39,26 +40,21 @@ QUERY5 = """SELECT r.Year as year, t.School as team, md.maxdiff as max_differenc
             FROM (SELECT MAX(r.Wins - r.Expected_Wins) as maxdiff, r.Year as year
                 FROM Records as r
                 GROUP BY r.Year) as md, Records as r, Teams as t
-            WHERE r.Year = md.year AND (r.Wins - r.Expected_Wins) = md.maxdiff AND r.Team = t.School"""
+            WHERE r.Year = md.year AND (r.Wins - r.Expected_Wins) = md.maxdiff AND r.Team = t.School
+            ORDER BY years DESC"""
 
-QUERY6 = """ SELECT total.year as year, number_of_teams.teams_count as number_of_teams, total.games as total_games, home.games as home, away.games as away
-            FROM (SELECT COUNT(*) as games, g.Season as year
+QUERY6 = """SELECT total.year as year, number_of_teams.teams_count as number_of_teams, total.games as total_games, total.home_games as home, total.away_games as away
+            FROM (SELECT COUNT(*) as games,
+					SUM(CASE WHEN g.home_points > g.Away_points THEN 1 ELSE 0 END) as home_games,
+					SUM(CASE WHEN g.home_points < g.Away_points THEN 1 ELSE 0 END) as away_games, g.Season as year
                 FROM Games as g
                 GROUP BY g.Season) as total,
-            (SELECT COUNT(*) as games, g.Season as year
-                FROM Games as g
-                WHERE g.home_points > g.Away_points
-                GROUP BY g.Season) as home,
-            (SELECT COUNT(*) as games, g.Season as year
-                FROM Games as g
-                WHERE g.home_points < g.Away_points
-                GROUP BY g.Season) as away,
             (SELECT total.Season as year, count(*) as teams_count FROM
                 (SELECT DISTINCT g.Season, g.Home_id FROM Games as g
                     UNION
                 SELECT DISTINCT g.Season, g.Away_id FROM Games as g) as total
                 GROUP BY total.Season) as number_of_teams
-            WHERE total.year = home.year AND total.year = away.year AND total.year = number_of_teams.year
+            WHERE total.year = number_of_teams.year
             ORDER BY year DESC"""
 
 

@@ -17,6 +17,7 @@ CREATE TABLE Teams (
 );
 
 CREATE INDEX team_name ON Teams(school);
+CREATE INDEX Venue_id ON Teams(Venue_id);
 
 CREATE TABLE Games (
 	ID int,
@@ -36,6 +37,7 @@ CREATE TABLE Games (
 
 CREATE INDEX away_id ON Games(Away_id);
 CREATE INDEX home_id ON Games(Home_id);
+CREATE INDEX Venue_id ON Games(Venue_id);
 
 CREATE TABLE Players (
 	ID int,
