@@ -159,7 +159,7 @@ def main():
 
     HEADERS["Authorization"] = auth
 
-    # insert_x is responsible for the insertion of all data to the DB
+    # insert_x is responsible for the insertion of all data to the x table of the DB
     # The order is crucial due to foreign key dependence
     # This script should run only once after building the DB using CREATE-DB-SCRIPT.sql
     cnx = connect_to_db(uid, pwd)
