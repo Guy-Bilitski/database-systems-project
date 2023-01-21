@@ -44,6 +44,7 @@ def connect_to_db(uid, pwd):
 
 
 def convert_to_jsons(jsons_string):
+    """ Converts a long string that represents a list of valid jsons into a real python list of dictionaries """
     prev = 1
     count = 0
     jsons_list = []
@@ -62,6 +63,7 @@ def convert_to_jsons(jsons_string):
 
 
 def get_docs(url, headers):
+    """ The function that returns the list of jsons received from the API """
     res = requests.get(url, headers=headers)
     text_res = res.text
     res_list = convert_to_jsons(text_res)
@@ -149,6 +151,7 @@ def insert_games(start_year, finish_year, cnx):
 
 
 def main():
+    # Reads the secrets (password, user id). This file should never be uploaded the web (e.g github, bitbucket, etc)
     with open('../DOCUMENTATION/MYSQL-USER-AND-PASSWORD.txt') as f:
         auth = f.readline()[:-1]
         uid = f.readline()[:-1]
@@ -156,6 +159,9 @@ def main():
 
     HEADERS["Authorization"] = auth
 
+    # insert_x is responsible for the insertion of all data to the DB
+    # The order is crucial due to foreign key dependence
+    # This script should run only once after building the DB using CREATE-DB-SCRIPT.sql
     cnx = connect_to_db(uid, pwd)
     insert_venues(cnx)
     insert_teams(cnx)

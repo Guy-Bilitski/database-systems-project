@@ -75,6 +75,7 @@ def connect_to_db(uid, pwd):
 
 
 def pick_query(query_num, cnx):
+    """ The function that is responsible to parse the requested query, perform it, and display it to the screen """
     with cnx.cursor() as cursor:
         if query_num == 1:
             player_name = input("Insert term to search for the player's name")
@@ -124,6 +125,7 @@ def pick_query(query_num, cnx):
 
 
 def main():
+    """ The main app that will run to the user """
     with open('../DOCUMENTATION/MYSQL-USER-AND-PASSWORD.txt') as f:
         auth = f.readline()[:-1]
         uid = f.readline()[:-1]
